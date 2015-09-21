@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+Metabolic Syndrome Calculator
+Author: John Chandra (johncha@bu.edu)
+-->
+<head>
+<title>Metabolic Syndrome</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" />
+<script src= "http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+
+<script>
+var msApp = angular.module('msApp', []);
+msApp.controller('msCtrl', function($scope) {
+    $scope.gender = "";
+	$scope.unit = "";
+	
+	$scope.resetNotification = function(){
+		$scope.output = "";
+		$scope.alertClass = '';
+	}
+	
+	$scope.setGender = function(gender){
+		$scope.resetNotification();
+		$scope.gender = gender;
+	}
+	
+	$scope.genderClass = function(gender) {
+		return gender === $scope.gender ? 'btn-primary' : '';
+	}
+	
+	$scope.setUnit = function(unit){
+		$scope.resetNotification();
+		$scope.unit = unit;
+	}
+	
+	$scope.unitClass = function(unit) {
+		return unit === $scope.unit ? 'btn-primary' : '';
+	}
+	
+	$scope.calculateMS = function() {
+		var metric = 0;
+		var max_inch = 0;
+		var max_cm = 0;
+		var min_hdl = 0;
+		
+		$scope.resetNotification();
+		
+		if($scope.gender == '') {
+			$scope.output = "Please select the gender";
+			$scope.alertClass = 'alert-warning';
+			return;
+		}
+		
+		if($scope.unit == '') {
+			$scope.output = "Please select the measurement unit for the waist";
+			$scope.alertClass = 'alert-warning';
+			return;
+		}		
+		
+		if($scope.gender == 'male'){
+			max_inch = 40;
+			max_cm = 101.6;
+			min_hdl = 40;
+		}		
+		if($scope.gender == 'female'){
+			max_inch = 35;
+			max_cm = 88.9;
+			min_hdl = 50;
+		}
+		
+		if(($scope.unit == 'inch' && $scope.waist > max_inch) || ($scope.unit == 'cm' && $scope.waist > max_cm)){
+			metric++;
+		}
+		
+		if($scope.fbt >= 150)
+			metric++;
+		
+		if($scope.hdl < min_hdl)
+			metric++;
+		
+		if($scope.systolic >= 130 || $scope.diastolic >= 85)
+			metric++;
+		
+		if($scope.fg >= 100)
+			metric++;
+		
+		if(metric >= 3) {
+			$scope.output = "Positive Metabolic Syndrome";
+			$scope.alertClass = 'alert-danger';
+		}
+		if(metric < 3 && metric > 0) {
+			$scope.output = "Negative Metabolic Syndrome";
+			$scope.alertClass = 'alert-success';
+		}
+	}
+});
+
+
+</script>
+
+</head>
+<body>
+<div class="container" style="min-height: 100%;">
+	<div ng-app="msApp" ng-controller="msCtrl" align=center>	 
+		<h1>Metabolic Syndrome</h1>
+		
+		<br><br>
+		<div class="row">
+			<div class="col-md-4 form-group">
+				<div class="text-left"><b>Gender</b></div>
+				<div class="btn-group btn-group-justified" role="group">
+					<div class="btn-group" role="group">
+						<button type="button" class="btn btn-default" ng-click="setGender('male')" ng-class="genderClass('male')">Male</button>
+					</div>
+					<div class="btn-group" role="group">
+						<button type="button" class="btn btn-default" ng-click="setGender('female')" ng-class="genderClass('female')">Female</button>
+					</div>
+				</div>
+			</div>
+			<div class="col-md-4 form-group">
+				<div class="text-left"><b>Waist Circumference</b></div>
+				<div class="input-group">
+				<input type="number" min="0" step="1" ng-model="waist" class="form-control" placeholder="Enter waist circumference" ng-class="waistClass">
+				<span class="input-group-btn" role="group">
+					<button type="button" class="btn btn-default" ng-click="setUnit('inch')" ng-class="unitClass('inch')">inch</button>
+					<button type="button" class="btn btn-default" ng-click="setUnit('cm')" ng-class="unitClass('cm')">cm</button>
+				</span>
+				</div>
+			</div>
+			<div class="col-md-4 form-group">
+				<div class="text-left"><b>Fasting Blood Triglycerides</b>(mg/dL)</div>
+				<input type="number" min="0" step="1" ng-model="fbt" class="form-control" placeholder="Enter fasting blook triglycerides" >
+			</div>
+			<div class="col-md-4 form-group">	
+				<div class="text-left"><b>Low HDL Cholesterol</b> (mg/dL)</div>
+				<input type="number" min="0" step="1" ng-model="hdl" class="form-control" placeholder="Enter low HDL cholesterol" ng-class="hdlClass">
+			</div>
+			<div class="col-md-4 form-group">		
+				<div class="text-left"><b>Blood Pressure</b> (mm Hg)</div>
+				<div class="input-group">
+					<input type="number" min="0" step="1" ng-model="systolic" class="form-control" placeholder="Enter upper value" ng-class="systolicClass"/>
+					<span class="input-group-addon">/</span>
+					<input type="number" min="0" step="1" ng-model="diastolic" class="form-control" placeholder="Enter lower value" ng-class="diastolicClass"/>
+				</div>
+			</div>
+			<div class="col-md-4 form-group">	
+				<div class="text-left"><b>Fasting Glucose</b> (mg/dL)</div>
+				<input type="number" min="0" step="1" ng-model="fg" class="form-control" placeholder="Enter fasting glucose" ng-class="fgClass">
+			</div>
+		</div>
+		<br><br>
+		<button type="button" class="btn btn-primary" ng-click="calculateMS()">Calculate</button>
+		<br><br>
+		<div class="alert" ng-class="alertClass" role="alert">{{output}}</div>
+		
+		<footer>
+		DISCLAIMER:The patient records in this system are simplified simulations of Electronic Health Records (EHRs) for research and teaching purpose only. 
+		They are different from EHRs and do not comply with HIPAA. All patient data are fictional and no actual patient data are used.
+		</footer>
+	</div>
+</div>
+</body>
+</html>
